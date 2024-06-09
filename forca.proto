@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package forca;
+
+// Serviço gRPC para o jogo da forca
+service Forca {
+  // Inicia uma nova sessão de jogo
+  rpc JoinGame (JoinGameRequest) returns (JoinGameResponse);
+
+  // Envia um chute de letra
+  rpc GuessLetter (GuessLetterRequest) returns (GuessLetterResponse);
+
+  // Inicia o jogo depois que todos os jogadores estão prontos
+  rpc StartGame (StartGameRequest) returns (StartGameResponse);
+
+  // Obter o estado atual do jogo
+  rpc GetGameState (GetGameStateRequest) returns (GetGameStateResponse);
+}
+
+// Solicitação para um jogador entrar no jogo
+message JoinGameRequest {
+  string player_name = 1;
+}
+
+// Resposta para a solicitação de entrar no jogo
+message JoinGameResponse {
+  string player_id = 1;
+  string message = 2;
+}
+
+// Solicitação para iniciar o jogo
+message StartGameRequest {
+  string player_id = 1; // O jogador que iniciou o jogo
+}
+
+// Resposta para a solicitação de iniciar o jogo
+message StartGameResponse {
+  string message = 1;
+  bool success = 2;
+}
+
+// Solicitação para chutar uma letra
+message GuessLetterRequest {
+  string player_id = 1;
+  string letter = 2;
+}
+
+// Resposta para o chute de uma letra
+message GuessLetterResponse {
+  string message = 1;
+  bool correct = 2;
+  bool game_over = 3;
+  int32 points = 4;
+}
+
+// Solicitação para obter o estado atual do jogo
+message GetGameStateRequest {
+  string player_id = 1;
+}
+
+// Resposta com o estado atual do jogo
+message GetGameStateResponse {
+  string current_word = 1; // Palavras com letras não adivinhadas como "_"
+  int32 attempts_left = 2;
+  repeated string guessed_letters = 3;
+  string current_player = 4;
+  repeated PlayerScore scores = 5;
+  bool game_over = 6;
+  string message = 7;
+}
+
+// Estrutura para pontuação dos jogadores
+message PlayerScore {
+  string player_name = 1;
+  int32 score = 2;
+}
+
+
+/*
+PASSO A PASSO:
+
+No terminal do vs code:
+python -m venv venv
+
+No git bash:
+venv/Scripts/activate
+
+Cria o arquivo forca.proto
+
+No terminal do vs code:
+python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. forca.proto
+
+
+mudar pra escolher a palavra e a vez quando botar o nome ao inves de dar enter
+*/
