@@ -1,6 +1,8 @@
 import grpc
 import forca_pb2
 import forca_pb2_grpc
+import os
+import time
 
 class ForcaClient:
     def __init__(self, channel):
@@ -21,25 +23,100 @@ class ForcaClient:
     def guess_letter(self, player_id, letter):
         response = self.stub.GuessLetter(forca_pb2.GuessLetterRequest(player_id=player_id, letter=letter))
         print(response.message)
+        # self.draw_hangman(response.attempts_left)
         if response.correct:
-            print("Correct guess!")
+            print("Correto!")
         else:
-            print("Incorrect guess.")
+            print("Incorreto.")
         if response.game_over:
             print("Game over!")
 
     def get_game_state(self, player_id):
         response = self.stub.GetGameState(forca_pb2.GetGameStateRequest(player_id=player_id))
-        print("Current Word:", response.current_word)
-        print("Attempts Left:", response.attempts_left)
-        print("Guessed Letters:", ', '.join(response.guessed_letters))
-        print("Current Player:", response.current_player)
-        print("Scores:")
+        self.clear_screen()
+        print("Palavra atual:", response.current_word)
+        print("Tentativas restantes :", response.attempts_left)
+        print("Letras:", ', '.join(response.guessed_letters))
+        print("Jogador atual:", response.current_player)
+        print("Potuação:")
         for player_score in response.scores:
             print(f"{player_score.player_name}: {player_score.score}")
+        self.draw_hangman(response.attempts_left)
         if response.game_over:
             print("Game over!")
         print(response.message)
+        return response
+
+    def draw_hangman(self, attempts_left):
+        stages = [
+            """
+               -----
+               |   |
+               O   |
+              /|\\  |
+              / \\  |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+               O   |
+              /|\\  |
+              /    |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+               O   |
+              /|\\  |
+                   |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+               O   |
+              /|   |
+                   |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+               O   |
+               |   |
+                   |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+               O   |
+                   |
+                   |
+                   |
+            =========
+            """,
+            """
+               -----
+               |   |
+                   |
+                   |
+                   |
+                   |
+            =========
+            """
+        ]
+        print(stages[attempts_left])
+
+    def clear_screen(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
 
 def run():
     # Conectando ao servidor gRPC
@@ -56,12 +133,11 @@ def run():
 
         # Loop principal do jogo
         while True:
-            client.get_game_state(player_id)
-            if input("Deseja fazer um chute? (S/N): ").lower() == 's':
+            game_state = client.get_game_state(player_id)
+            if game_state.current_player == player_name:
                 letter = input("Digite a letra: ").lower()
                 client.guess_letter(player_id, letter)
-            else:
-                break
+            time.sleep(3)  # Aguarda um pouco antes de atualizar novamente
 
 if __name__ == '__main__':
     run()
